@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LAN Proxy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #0f172a;
+            border-right: 1px solid #334155;
+            padding: 1.5rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar-title {
+            padding: 0 1.5rem 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #cbd5e1;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .nav-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 1.5rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            color: #f1f5f9;
+        }
+        
+        .header-actions button {
+            padding: 0.5rem 1rem;
+            margin-left: 0.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .header-actions button:hover {
+            background: #2563eb;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-label {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        
+        .table-container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #0f172a;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #f1f5f9;
+            border-bottom: 2px solid #334155;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            margin-right: 0.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .action-btn.danger {
+            background: #ef4444;
+        }
+        
+        .csv-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .csv-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #f1f5f9;
+        }
+        
+        .csv-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .csv-controls input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #f1f5f9;
+        }
+        
+        .csv-controls button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .csv-preview {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .footer {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid #334155;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid #334155;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-title">🎛️ Admin</div>
+        <div class="sidebar-nav">
+            <button class="nav-item active" onclick="switchTab(event, 'overview')">📊 Overview</button>
+            <button class="nav-item" onclick="switchTab(event, 'users')">👥 Users</button>
+            <button class="nav-item" onclick="switchTab(event, 'blacklist')">🚫 Blacklist</button>
+            <button class="nav-item" onclick="switchTab(event, 'devices')">📱 Devices</button>
+            <button class="nav-item" onclick="switchTab(event, 'security')">🔐 Security</button>
+            <button class="nav-item" onclick="switchTab(event, 'audit')">📋 Audit</button>
+            <hr style="border: none; border-top: 1px solid #334155; margin: 1rem 0;">
+            <button class="nav-item" style="color: #ef4444;" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content">
+            <div class="header">
+                <h1>📊 Dashboard Overview</h1>
+                <div class="header-actions">
+                    <button onclick="location.reload()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="totalUsers">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Registered Devices</div>
+                    <div class="stat-value" id="totalDevices">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Blacklisted IPs</div>
+                    <div class="stat-value" id="blacklistedIps">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Tokens</div>
+                    <div class="stat-value" id="activeTokens">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Users Tab -->
+        <div id="users" class="tab-content" style="display: none;">
+            <div class="header">
+                <h1>👥 User Management (CSV)</h1>
+            </div>
+            
+            <div class="csv-section">
+                <div class="csv-title">Registered Users Database</div>
+                <div class="csv-controls">
+                    <input type="text" id="userSearch" placeholder="Search by email or username...">
+                    <button onclick="loadUsers()">🔍 Search</button>
+                    <button onclick="exportCsv('/admin/users/export')">⬇️ Export CSV</button>
+                </div>
+                <div class="csv-preview" id="usersPreview">Loading...</div>
+            </div>
+        </div>
+        
+        <!-- Blacklist Tab -->
+        <div id="blacklist" class="tab-content" style="display: none;">
+            <div class="header">
+                <h1>🚫 IP Blacklist Management (CSV)</h1>
+            </div>
+            
+            <div class="csv-section">
+                <div class="csv-title">Blacklisted IPs Database</div>
+                <div class="csv-controls">
+                    <input type="text" id="blacklistSearch" placeholder="Search by IP address...">
+                    <button onclick="loadBlacklist()">🔍 Search</button>
+                    <button onclick="exportCsv('/admin/blacklist/export')">⬇️ Export CSV</button>
+                </div>
+                <div class="csv-preview" id="blacklistPreview">Loading...</div>
+            </div>
+        </div>
+        
+        <!-- Devices Tab -->
+        <div id="devices" class="tab-content" style="display: none;">
+            <div class="header">
+                <h1>📱 Registered Devices</h1>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device Name</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>Registered Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devicesTable">
+                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Security Tab -->
+        <div id="security" class="tab-content" style="display: none;">
+            <div class="header">
+                <h1>🔐 Security Configuration</h1>
+            </div>
+            
+            <div class="csv-section">
+                <div class="csv-title">Active Security Settings</div>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="border: none; padding: 0.5rem;">
+                            <strong>🔐 Encryption:</strong> AES-256-GCM<br>
+                            <strong>✍️ Signature:</strong> Ed25519 (7-day rotation)<br>
+                            <strong>🔗 HMAC:</strong> SHA256<br>
+                            <strong>⏱️ Rate Limit:</strong> 30 req/60s per IP
+                        </td>
+                        <td style="border: none; padding: 0.5rem;">
+                            <strong>📧 Magic Link TTL:</strong> 15 minutes<br>
+                            <strong>🎫 Access Token TTL:</strong> 15 hours<br>
+                            <strong>📱 OTP Max Attempts:</strong> 5<br>
+                            <strong>🔒 CSRF Protection:</strong> Enabled
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Audit Logs Tab -->
+        <div id="audit" class="tab-content" style="display: none;">
+            <div class="header">
+                <h1>📋 Audit Logs & Events</h1>
+                <div class="header-actions">
+                    <button onclick="exportCsv('/admin/audit-logs/export')">⬇️ Export JSONL</button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Event Type</th>
+                            <th>IP Address</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTable">
+                        <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🔒 Admin Dashboard - All administrative actions are logged for security audit trails</p>
+        </div>
+    </div>
+    
+    <script>
+        function switchTab(event, tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.style.display = 'none');
+            document.getElementById(tabName).style.display = 'block';
+            
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(n => n.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tabName === 'users') loadUsers();
+            else if (tabName === 'blacklist') loadBlacklist();
+            else if (tabName === 'devices') loadDevices();
+            else if (tabName === 'audit') loadAuditLogs();
+            else if (tabName === 'overview') loadDashboard();
+        }
+        
+        function loadDashboard() {
+            fetch('/admin/dashboard')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('totalUsers').textContent = d.stats.totalUsers || 0;
+                    document.getElementById('totalDevices').textContent = d.stats.registeredDevices || 0;
+                    document.getElementById('blacklistedIps').textContent = d.stats.blacklistedIps || 0;
+                    document.getElementById('activeTokens').textContent = d.stats.activeTokens || 0;
+                })
+                .catch(e => console.error('Error loading dashboard:', e));
+        }
+        
+        function loadUsers() {
+            fetch('/admin/users')
+                .then(r => r.json())
+                .then(d => {
+                    const preview = document.getElementById('usersPreview');
+                    preview.textContent = JSON.stringify(d.users, null, 2);
+                })
+                .catch(e => {
+                    document.getElementById('usersPreview').textContent = 'Error loading users';
+                });
+        }
+        
+        function loadBlacklist() {
+            fetch('/admin/blacklist')
+                .then(r => r.json())
+                .then(d => {
+                    const preview = document.getElementById('blacklistPreview');
+                    preview.textContent = JSON.stringify(d.blacklist, null, 2);
+                })
+                .catch(e => {
+                    document.getElementById('blacklistPreview').textContent = 'Error loading blacklist';
+                });
+        }
+        
+        function loadDevices() {
+            fetch('/admin/devices')
+                .then(r => r.json())
+                .then(d => {
+                    const tbody = document.getElementById('devicesTable');
+                    tbody.innerHTML = (d.devices || []).map(d => `
+                        <tr>
+                            <td>${d.deviceName}</td>
+                            <td>${d.lanIp}</td>
+                            <td>${d.status}</td>
+                            <td>${d.createdDate}</td>
+                            <td>
+                                <button class="action-btn danger" onclick="removeDevice('${d.lanIp}')">Remove</button>
+                            </td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="5" style="text-align: center;">No devices</td></tr>';
+                })
+                .catch(e => {
+                    document.getElementById('devicesTable').innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading devices</td></tr>';
+                });
+        }
+        
+        function loadAuditLogs() {
+            fetch('/admin/audit-logs')
+                .then(r => r.json())
+                .then(d => {
+                    const tbody = document.getElementById('auditTable');
+                    tbody.innerHTML = (d.logs || []).slice(0, 50).map(l => `
+                        <tr>
+                            <td>${new Date(l.timestamp).toLocaleString()}</td>
+                            <td>${l.eventType}</td>
+                            <td>${l.ip || l.adminIp || '-'}</td>
+                            <td>${JSON.stringify(l).substring(0, 50)}...</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="4" style="text-align: center;">No logs</td></tr>';
+                })
+                .catch(e => {
+                    document.getElementById('auditTable').innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading logs</td></tr>';
+                });
+        }
+        
+        function removeDevice(ip) {
+            if (confirm('Remove device ' + ip + '?')) {
+                fetch('/admin/devices/' + ip, { method: 'DELETE' })
+                    .then(() => loadDevices())
+                    .catch(e => alert('Error: ' + e));
+            }
+        }
+        
+        function exportCsv(path) {
+            window.location.href = path;
+        }
+        
+        function logout() {
+            if (confirm('Logout from admin dashboard?')) {
+                window.location.href = '/logout';
+            }
+        }
+        
+        // Initialize
+        loadDashboard();
+    </script>
+</body>
+</html>
